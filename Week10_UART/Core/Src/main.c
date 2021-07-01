@@ -45,6 +45,8 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 char TxDataBuffer[32] = {0};
+
+char RxDataBuffer[32] = {0};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -52,7 +54,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
-
+void UARTRecirvrAndResponsePolling();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -105,7 +107,12 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	UARTRecirvrAndResponsePolling();
+	//UARTRecirvrAndResponsePolling();
+
+	HAL_UART_Receive_IT(&huart2, (uint8_t*)RxDataBuffer, 3);
+
+	HAL_Delay(100);
+	HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 
   }
   /* USER CODE END 3 */
@@ -224,7 +231,19 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void UARTRecirvrAndResponsePolling()
 {
+	char Recieve[32] = {0};
 
+	HAL_UART_Receive(&huart2, (uint8_t*)Recieve , 3, 1000);
+
+	sprintf(TxDataBuffer, "Recieve = [ %s ]\r\n", Recieve);
+
+	HAL_UART_Transmit(&huart2, (uint8_t*)TxDataBuffer, strlen(TxDataBuffer), 1000);
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	sprintf(TxDataBuffer, "Received :[%s]\r\n" , RxDataBuffer);
+	HAL_UART_Transmit_IT(&huart2, (uint8_t*)TxDataBuffer, strlen(TxDataBuffer));
 }
 /* USER CODE END 4 */
 
