@@ -47,6 +47,8 @@ UART_HandleTypeDef huart2;
 char TxDataBuffer[32] = {0};
 
 char RxDataBuffer[32] = {0};
+
+int16_t inputchar2=0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -108,19 +110,48 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    //test1
 	//UARTRecirvrAndResponsePolling();
 
-	HAL_UART_Receive_IT(&huart2, (uint8_t*)RxDataBuffer, 5);
+	//test2
+//	HAL_UART_Receive_IT(&huart2, (uint8_t*)RxDataBuffer, 5);
+//	int16_t inputchar = UARTRecieveIT();
+//	if(inputchar!=-1)
+//	{
+//		sprintf(TxDataBuffer, "ReceivedChar:[%c]\r\n", inputchar);
+//		HAL_UART_Transmit(&huart2, (uint8_t*)TxDataBuffer, strlen(TxDataBuffer), 1000);
+//	}
+//
+//	if(inputchar == 97)
+//	{
+//		 char sua[] = "Yayyyy\r\n";
+//		 HAL_UART_Transmit_IT(&huart2,(uint8_t*) sua, strlen(sua));
+//	}
 
 
+////////////////////////////////////////////////////////
+	//use
+	    HAL_UART_Receive_IT(&huart2, (uint8_t*)RxDataBuffer, 32);
+		int16_t inputchar = UARTRecieveIT();
+		if(inputchar!=-1)
+		{
+			if(inputchar == 48)
+			{
+				 char sua[] = "Yayyyy\r\n";
+				 HAL_UART_Transmit_IT(&huart2,(uint8_t*) sua, strlen(sua));
+			}
 
-	int16_t inputchar = UARTRecieveIT();
-	if(inputchar!=-1)
-	{
-
-		sprintf(TxDataBuffer, "ReceivedChar:[%c]\r\n", inputchar);
-		HAL_UART_Transmit(&huart2, (uint8_t*)TxDataBuffer, strlen(TxDataBuffer), 1000);
-	}
+			else if(inputchar == 49)
+			{
+				 char sua[] = "kkkkkk\r\n";
+				 HAL_UART_Transmit_IT(&huart2,(uint8_t*) sua, strlen(sua));
+			}
+			else
+			{
+				char sua[] = "Please try again\r\n";
+				HAL_UART_Transmit(&huart2,(uint8_t*) sua, strlen(sua),1000);
+			}
+		}
 
 
 
@@ -254,11 +285,11 @@ void UARTRecirvrAndResponsePolling()
 	HAL_UART_Transmit(&huart2, (uint8_t*)TxDataBuffer, strlen(TxDataBuffer), 1000);
 }
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-	sprintf(TxDataBuffer, "Received :[%s]\r\n" , RxDataBuffer);
-	HAL_UART_Transmit_IT(&huart2, (uint8_t*)TxDataBuffer, strlen(TxDataBuffer));
-}
+//void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+//{
+//	sprintf(TxDataBuffer, "Received :[%s]\r\n" , RxDataBuffer);
+//	HAL_UART_Transmit_IT(&huart2, (uint8_t*)TxDataBuffer, strlen(TxDataBuffer));
+//}
 
 int16_t UARTRecieveIT()
 {
