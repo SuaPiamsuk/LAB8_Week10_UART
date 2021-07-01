@@ -229,6 +229,11 @@ int main(void)
 				sprintf(TxDataBuffer, "Speed [%d] Hz\r\n", freq);
 				HAL_UART_Transmit_IT(&huart2, (uint8_t*)TxDataBuffer, strlen(TxDataBuffer));
 			}
+			else
+			{
+				char sua[] = "Please try again\r\n";
+				HAL_UART_Transmit(&huart2,(uint8_t*) sua, strlen(sua),1000);
+			}
 
 
 		}
@@ -236,7 +241,7 @@ int main(void)
 		{
 //			char sua[] = "Mode20\r\n";
 //			HAL_UART_Transmit_IT(&huart2,(uint8_t*) sua, strlen(sua));
-			if(inputchar == 120)
+			if(inputchar == 120) //press'x'
 			{
 				 char sua[] = "Mode0\r\n";
 				 HAL_UART_Transmit_IT(&huart2,(uint8_t*) sua, strlen(sua));
@@ -262,7 +267,7 @@ int main(void)
 			else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == 1)
 			{
 				char sua[] = "unpress\r\n";
-				HAL_UART_Transmit(&huart2,(uint8_t*) sua, strlen(sua),1000);
+				HAL_UART_Transmit_IT(&huart2,(uint8_t*) sua, strlen(sua));
 			}
 		}
 	}
