@@ -55,6 +55,7 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
 void UARTRecirvrAndResponsePolling();
+int16_t UARTRecieveIT();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -109,7 +110,20 @@ int main(void)
     /* USER CODE BEGIN 3 */
 	//UARTRecirvrAndResponsePolling();
 
-	HAL_UART_Receive_IT(&huart2, (uint8_t*)RxDataBuffer, 3);
+	HAL_UART_Receive_IT(&huart2, (uint8_t*)RxDataBuffer, 5);
+
+
+
+	int16_t inputchar = UARTRecieveIT();
+	if(inputchar!=-1)
+	{
+
+		sprintf(TxDataBuffer, "ReceivedChar:[%c]\r\n", inputchar);
+		HAL_UART_Transmit(&huart2, (uint8_t*)TxDataBuffer, strlen(TxDataBuffer), 1000);
+	}
+
+
+
 
 	HAL_Delay(100);
 	HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
@@ -244,6 +258,18 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 	sprintf(TxDataBuffer, "Received :[%s]\r\n" , RxDataBuffer);
 	HAL_UART_Transmit_IT(&huart2, (uint8_t*)TxDataBuffer, strlen(TxDataBuffer));
+}
+
+int16_t UARTRecieveIT()
+{
+	static uint32_t dataPos =0;
+	int16_t data=-1;
+	if(huart2.RxXferSize - huart2.RxXferCount!=dataPos)
+	{
+		data=RxDataBuffer[dataPos];
+		dataPos= (dataPos+1)%huart2.RxXferSize;
+	}
+	return data;
 }
 /* USER CODE END 4 */
 
