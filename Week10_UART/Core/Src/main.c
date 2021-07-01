@@ -49,6 +49,15 @@ char TxDataBuffer[32] = {0};
 char RxDataBuffer[32] = {0};
 
 int16_t inputchar2=0;
+
+uint8_t state = 0;
+
+uint8_t Led = 0;
+
+uint32_t T=0;
+uint32_t freq = 1;
+uint32_t Timestamp = 0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -131,20 +140,107 @@ int main(void)
 
 ////////////////////////////////////////////////////////
 	//use
-	    HAL_UART_Receive_IT(&huart2, (uint8_t*)RxDataBuffer, 32);
-		int16_t inputchar = UARTRecieveIT();
-		if(inputchar!=-1)
+//	    HAL_UART_Receive_IT(&huart2, (uint8_t*)RxDataBuffer, 32);
+//
+//		int16_t inputchar = UARTRecieveIT();
+//		if(inputchar!=-1)
+//		{
+//			if(inputchar == 48)
+//			{
+//				 char sua[] = "Yayyyy\r\n";
+//				 HAL_UART_Transmit_IT(&huart2,(uint8_t*) sua, strlen(sua));
+//			}
+//
+//			else if(inputchar == 49)
+//			{
+//				 char sua[] = "kkkkkk\r\n";
+//				 HAL_UART_Transmit_IT(&huart2,(uint8_t*) sua, strlen(sua));
+//			}
+//			else
+//			{
+//				char sua[] = "Please try again\r\n";
+//				HAL_UART_Transmit(&huart2,(uint8_t*) sua, strlen(sua),1000);
+//			}
+//		}
+	 //use2
+	HAL_UART_Receive_IT(&huart2, (uint8_t*)RxDataBuffer, 32);
+
+	int16_t inputchar = UARTRecieveIT();
+	if(inputchar!=-1)
+	{
+		sprintf(TxDataBuffer, "ReceivedChar:[%c]\r\n", inputchar);
+		HAL_UART_Transmit(&huart2, (uint8_t*)TxDataBuffer, strlen(TxDataBuffer),50);
+		if(state == 0)
 		{
 			if(inputchar == 48)
 			{
-				 char sua[] = "Yayyyy\r\n";
+				 char sua[] = "Mode1\r\n";
 				 HAL_UART_Transmit_IT(&huart2,(uint8_t*) sua, strlen(sua));
+				 state = 1;
 			}
 
 			else if(inputchar == 49)
 			{
-				 char sua[] = "kkkkkk\r\n";
+				 char sua[] = "Mode2\r\n";
 				 HAL_UART_Transmit_IT(&huart2,(uint8_t*) sua, strlen(sua));
+				 state = 2;
+			}
+			else if(inputchar != 48 && inputchar != 49)
+			{
+				char sua[] = "Please try again\r\n";
+				HAL_UART_Transmit(&huart2,(uint8_t*) sua, strlen(sua),1000);
+//				sprintf(TxDataBuffer, "ReceivedChar:[%c]\r\n", inputchar);
+//				HAL_UART_Transmit_IT(&huart2, (uint8_t*)TxDataBuffer, strlen(TxDataBuffer));
+				//state = 0;
+			}
+		}
+		else if(state == 1)
+		{
+			if(inputchar == 120) //press 'x'
+			{
+				 char sua[] = "Mode0\r\n";
+				 HAL_UART_Transmit_IT(&huart2,(uint8_t*) sua, strlen(sua));
+				 state = 0;
+			}
+			else if(inputchar == 100) //press 'd'
+			{
+				Led = !Led;
+				if(Led == 0)
+				{
+					char sua[] = "LED_Off\r\n";
+				    HAL_UART_Transmit(&huart2,(uint8_t*) sua, strlen(sua),1000);
+				}
+				else
+				{
+					char sua[] = "LED_ON\r\n";
+				    HAL_UART_Transmit(&huart2,(uint8_t*) sua, strlen(sua),1000);
+				}
+			}
+			else if(inputchar == 97) //press 'a'
+			{
+				freq++;
+				sprintf(TxDataBuffer, "Speed [%d] Hz\r\n", freq);
+				HAL_UART_Transmit_IT(&huart2, (uint8_t*)TxDataBuffer, strlen(TxDataBuffer));
+			}
+			else if(inputchar == 115) //press 's'
+			{
+				freq--;
+				if(freq < 1){freq = 1;}
+				sprintf(TxDataBuffer, "Speed [%d] Hz\r\n", freq);
+				HAL_UART_Transmit_IT(&huart2, (uint8_t*)TxDataBuffer, strlen(TxDataBuffer));
+			}
+
+
+		}
+		else if(state == 2)
+		{
+//			char sua[] = "Mode20\r\n";
+//			HAL_UART_Transmit_IT(&huart2,(uint8_t*) sua, strlen(sua));
+			if(inputchar == 120)
+			{
+				 char sua[] = "Mode0\r\n";
+				 HAL_UART_Transmit_IT(&huart2,(uint8_t*) sua, strlen(sua));
+				 state = 0;
 			}
 			else
 			{
@@ -152,12 +248,42 @@ int main(void)
 				HAL_UART_Transmit(&huart2,(uint8_t*) sua, strlen(sua),1000);
 			}
 		}
+	}
+
+	else if(inputchar == -1)
+	{
+		if(state == 2)
+		{
+			if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == 0)
+			{
+				char sua[] = "Press\r\n";
+				HAL_UART_Transmit(&huart2,(uint8_t*) sua, strlen(sua),1000);
+			}
+			else if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == 1)
+			{
+				char sua[] = "unpress\r\n";
+				HAL_UART_Transmit(&huart2,(uint8_t*) sua, strlen(sua),1000);
+			}
+		}
+	}
 
 
 
 
-	HAL_Delay(100);
-	HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+	if(Led == 1)
+	{
+
+		if((HAL_GetTick() - Timestamp) >= 500/freq)
+		{
+			Timestamp = HAL_GetTick();
+			HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+		}
+	}
+	else
+	{
+		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+	}
+
 
   }
   /* USER CODE END 3 */
